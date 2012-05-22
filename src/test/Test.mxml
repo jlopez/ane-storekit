@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               applicationComplete="applicationCompleteHandler();">
+    <fx:Declarations>
+    </fx:Declarations>
+
+    <fx:Script><![CDATA[
+      import flash.events.Event;
+
+      import com.jesusla.storekit.StoreKit;
+      import com.jesusla.storekit.TransactionEvent;
+
+      private function applicationCompleteHandler():void {
+        StoreKit.addEventListener(StoreKit.STOREKIT_INITIALIZED_EVENT, storeKit_initializedHandler);
+        StoreKit.addEventListener(TransactionEvent.TRANSACTION_PURCHASED, storeKit_paymentSucceededHandler);
+        StoreKit.addEventListener(TransactionEvent.TRANSACTION_FAILED, storeKit_paymentFailedHandler);
+      }
+
+      private function storeKit_initializedHandler(event:Event):void {
+        var p:Object = StoreKit.products;
+        log.text += "initialized products:\n";
+        for (var pid:String in p) {
+          var q:Object = p[pid];
+          log.text += "  " + pid + ": " + q.localizedTitle + " (" + q.localizedPrice + ")\n";
+        }
+      }
+
+      private function storeKit_paymentSucceededHandler(event:TransactionEvent):void {
+        var transaction:Object = event.transaction;
+        log.text += "paymentSucceeded\n";
+        log.text += "  Bought " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier + " (" + transaction.transactionIdentifier + ")\n";
+      }
+
+      private function storeKit_paymentFailedHandler(event:TransactionEvent):void {
+        var transaction:Object = event.transaction;
+        log.text += "paymentFailed\n";
+        log.text += "  Unable to buy " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier + "\n";
+      }
+
+      private function clrHandler():void {
+        var transactions:Array = StoreKit.transactions;
+        log.text += "Deleting " + transactions.length + " transactions\n";
+        for (var ix:uint = 0; ix < transactions.length; ++ix) {
+          var t:Object = transactions[ix];
+          log.text += "  " + ix + ". " + (StoreKit.finishTransaction(t) ? "OK\n" : "FAIL\n");
+        }
+      }
+
+      private function canHandler():void {
+        var can:Boolean = StoreKit.canMakePayments;
+        log.text += can ? 'yes\n' : 'no\n';
+      }
+
+      private function transactionsHandler():void {
+        var transactions:Array = StoreKit.transactions;
+        log.text += "Found " + transactions.length + " transactions\n";
+        for (var ix:uint = 0; ix < transactions.length; ++ix) {
+          var t:Object = transactions[ix];
+          log.text += "  " + ix + ". " + t.transactionState + " " + t.transactionIdentifier + " " + t.transactionDate + " " + (t.error ? t.error.code + " " + t.error.domain + " " + t.error.localizedDescription : '') + "\n";
+        }
+      }
+    ]]></fx:Script>
+
+    <s:layout>
+      <s:VerticalLayout horizontalAlign="center" verticalAlign="middle"/>
+    </s:layout>
+    <s:Panel title="StoreKit ANE Test" width="90%" height="90%">
+      <s:layout>
+        <s:VerticalLayout horizontalAlign="center" gap="32" paddingTop="20" paddingBottom="20"/>
+      </s:layout>
+
+      <s:HGroup width="80%" verticalAlign="middle">
+        <s:Button label="init"
+          click="StoreKit.init(products.text.split(','));"/>
+        <s:TextInput id="products" width="100%" text="sku1,sku2,sku3,sku4,sku5"/>
+      </s:HGroup>
+
+      <s:HGroup width="80%" verticalAlign="middle">
+        <s:Button label="buy"
+          click="log.text += StoreKit.requestPayment(product.text) ? 'OK\n' : 'FAIL\n';"/>
+        <s:TextInput id="product" width="100%" text="sku1"/>
+      </s:HGroup>
+
+      <s:HGroup width="80%">
+        <s:Button label="can?" click="canHandler()"/>
+        <s:Button label="txs" click="transactionsHandler()"/>
+        <s:Button label="clr" click="clrHandler()"/>
+        <s:Button label="cls" click="log.text = ''"/>
+      </s:HGroup>
+
+      <s:TextArea id="log" fontSize="14" height="100%" width="80%"/>
+
+    </s:Panel>
+
+</s:Application>

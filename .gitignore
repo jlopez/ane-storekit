@@ -1,0 +1,7 @@
+.*.swp
+.DS_Store
+__MACOSX
+*.mode1v3
+*.pbxuser
+*.xcworkspace
+xcuserdata/
