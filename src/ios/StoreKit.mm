@@ -166,19 +166,10 @@ FN_END
 @implementation SKPaymentTransaction (JLDictionaryRepresentation)
 
 - (NSDictionary *)dictionaryRepresentation {
-  // error & payment are included in the event they're nil
-  // if so, they're added as [NSNull null], otherwise, they're
-  // replaced below with their dictionary representation.
   NSArray *keys = [NSArray arrayWithObjects:@"transactionIdentifier",
                    @"transactionDate", @"transactionState", @"error",
-                   @"payment", nil];
-  NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:[self dictionaryWithValuesForKeys:keys]];
-  if (self.error)
-    [dict setObject:[self.error dictionaryRepresentation] forKey:@"error"];
-  if (self.payment)
-    [dict setObject:[self.payment dictionaryRepresentation] forKey:@"payment"];
-  // Missing: transactionReceipt
-  return dict;
+                   @"payment", @"transactionReceipt", nil];
+  return [NSMutableDictionary dictionaryWithDictionary:[self dictionaryWithValuesForKeys:keys]];
 }
 
 @end
@@ -188,17 +179,6 @@ FN_END
 - (NSDictionary *)dictionaryRepresentation {
   NSArray *keys = [NSArray arrayWithObjects:@"productIdentifier",
                    @"quantity", nil];
-  return [self dictionaryWithValuesForKeys:keys];
-}
-
-@end
-
-@implementation NSError (JLDictionaryRepresentation)
-
-- (NSDictionary *)dictionaryRepresentation {
-  NSArray *keys = [NSArray arrayWithObjects:@"domain", @"code",
-                   @"localizedDescription", @"localizedFailureReason",
-                   @"localizedRecoverySuggestion", nil];
   return [self dictionaryWithValuesForKeys:keys];
 }
 

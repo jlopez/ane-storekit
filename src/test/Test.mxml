@@ -20,46 +20,58 @@
 
       private function storeKit_initializedHandler(event:Event):void {
         var p:Object = StoreKit.products;
-        log.text += "initialized products:\n";
+        log("initialized products:");
         for (var pid:String in p) {
           var q:Object = p[pid];
-          log.text += "  " + pid + ": " + q.localizedTitle + " (" + q.localizedPrice + ")\n";
+          log("  " + pid + ": " + q.localizedTitle + " (" + q.localizedPrice + ")");
         }
       }
 
       private function storeKit_paymentSucceededHandler(event:TransactionEvent):void {
         var transaction:Object = event.transaction;
-        log.text += "paymentSucceeded\n";
-        log.text += "  Bought " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier + " (" + transaction.transactionIdentifier + ")\n";
+        log("paymentSucceeded");
+        log("  Bought " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier + " (" + transaction.transactionIdentifier + ")");
+        log("receipt: " + transaction.transactionReceipt);
       }
 
       private function storeKit_paymentFailedHandler(event:TransactionEvent):void {
         var transaction:Object = event.transaction;
-        log.text += "paymentFailed\n";
-        log.text += "  Unable to buy " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier + "\n";
+        log("paymentFailed");
+        log("  Unable to buy " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier);
       }
 
       private function clrHandler():void {
         var transactions:Array = StoreKit.transactions;
-        log.text += "Deleting " + transactions.length + " transactions\n";
+        log("Deleting " + transactions.length + " transactions");
         for (var ix:uint = 0; ix < transactions.length; ++ix) {
           var t:Object = transactions[ix];
-          log.text += "  " + ix + ". " + (StoreKit.finishTransaction(t) ? "OK\n" : "FAIL\n");
+          log("  " + ix + ". " + (StoreKit.finishTransaction(t) ? "OK" : "FAIL"));
         }
       }
 
       private function canHandler():void {
         var can:Boolean = StoreKit.canMakePayments;
-        log.text += can ? 'yes\n' : 'no\n';
+        log(can ? 'yes' : 'no');
       }
 
       private function transactionsHandler():void {
         var transactions:Array = StoreKit.transactions;
-        log.text += "Found " + transactions.length + " transactions\n";
+        log("Found " + transactions.length + " transactions");
         for (var ix:uint = 0; ix < transactions.length; ++ix) {
           var t:Object = transactions[ix];
-          log.text += "  " + ix + ". " + t.transactionState + " " + t.transactionIdentifier + " " + t.transactionDate + " " + (t.error ? t.error.code + " " + t.error.domain + " " + t.error.localizedDescription : '') + "\n";
+          log("  " + ix + ". " + t.transactionState + " " + t.transactionIdentifier + " " + t.transactionDate + " " + (t.error ? t.error.code + " " + t.error.domain + " " + t.error.localizedDescription : ''));
         }
+      }
+
+      private function log(msg:String):void {
+        console.text += msg + "\n";
+      }
+
+      private function logDump(indent:String, tag:String, obj:Object):void {
+        log(indent + tag + "{");
+        for (var prop:String in obj)
+          log(indent + "  " + prop + ": " + obj[prop]);
+        log(indent + "}");
       }
     ]]></fx:Script>
 
@@ -79,7 +91,7 @@
 
       <s:HGroup width="80%" verticalAlign="middle">
         <s:Button label="buy"
-          click="log.text += StoreKit.requestPayment(product.text) ? 'OK\n' : 'FAIL\n';"/>
+          click="log(StoreKit.requestPayment(product.text) ? 'OK' : 'FAIL');"/>
         <s:TextInput id="product" width="100%" text="sku1"/>
       </s:HGroup>
 
@@ -87,10 +99,10 @@
         <s:Button label="can?" click="canHandler()"/>
         <s:Button label="txs" click="transactionsHandler()"/>
         <s:Button label="clr" click="clrHandler()"/>
-        <s:Button label="cls" click="log.text = ''"/>
+        <s:Button label="cls" click="console.text = ''"/>
       </s:HGroup>
 
-      <s:TextArea id="log" fontSize="14" height="100%" width="80%"/>
+      <s:TextArea id="console" fontSize="14" height="100%" width="80%"/>
 
     </s:Panel>
 
