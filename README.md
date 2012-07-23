@@ -58,6 +58,7 @@ Usage
     transaction.transactionDate; // Purchase date as a String
         // to convert to a Date: "new Date(transaction.transactionDate)"
     transaction.transactionIdentifier; // Unique transaction ID
+    transaction.paymentReceipt; // Apple generated payment receipt
 
     // Purchase is fulfilled and if successful transaction is finalized:
     if (Backend.awardPowerUp("com.company.sku1"))
@@ -80,7 +81,7 @@ Usage
 
     // Just as with a successful transaction, the app should finalize the transaction
     // so that it is removed from the system:
-    StoreKit.finalizeTransaction(transaction); // true if successful
+    StoreKit.finishTransaction(transaction); // true if successful
 
     // Unlike TRANSACTION_PURCHASED & TRANSACTION_FAILED, the event TRANSACTION_UPDATED
     // is fired whenever a transaction changes state, whether successful or failed.
