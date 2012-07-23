@@ -8,6 +8,7 @@ TESTFLIGHT_TEAM_TOKEN = TEAM_TOKEN_HERE
 TESTFLIGHT_DLS = DIST_LISTS_HERE
 TESTFLIGHT_NOTIFY = False
 FACEBOOK_APP_ID = FB_APP_ID_HERE
+WIKI_GIT_URL = git@github.com:jlopez/ane-storekit.wiki.git
 
 SRCDIR = $(ROOT)/src/test
 SRC_MAIN = $(SRCDIR)/test.mxml
