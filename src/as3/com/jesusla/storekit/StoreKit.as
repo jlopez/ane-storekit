@@ -3,6 +3,7 @@ package com.jesusla.storekit {
   import flash.events.EventDispatcher;
   import flash.events.StatusEvent;
   import flash.external.ExtensionContext;
+  import flash.utils.getQualifiedClassName;
   import flash.utils.setTimeout;
 
   /**
@@ -151,6 +152,17 @@ package com.jesusla.storekit {
         dispatchEvent(new TransactionEvent(TransactionEvent.TRANSACTION_FAILED, transaction));
     }
 
+    public function getQualifiedClassName(obj:Object):String {
+      return flash.utils.getQualifiedClassName(obj);
+    }
+
+    public function enumerateObjectProperties(obj:Object):Array {
+      var keys:Array = [];
+      for (var key:String in obj)
+        keys.push(key);
+      return keys;
+    }
+
     //---------------------------------------------------------------------
     //
     // Private Methods.
@@ -167,7 +179,8 @@ package com.jesusla.storekit {
       if (context) {
         _isSupported = context.actionScriptData;
         context.addEventListener(StatusEvent.STATUS, context_statusEventHandler);
-        context.actionScriptData = _instance;
+        if (_isSupported)
+          context.call("setActionScriptThis", _instance);
       }
     }
   }
