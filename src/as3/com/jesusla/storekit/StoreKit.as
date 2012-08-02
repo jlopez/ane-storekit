@@ -3,6 +3,8 @@ package com.jesusla.storekit {
   import flash.events.EventDispatcher;
   import flash.events.StatusEvent;
   import flash.external.ExtensionContext;
+  import flash.utils.ByteArray;
+  import flash.utils.getTimer;
   import flash.utils.getQualifiedClassName;
   import flash.utils.setTimeout;
 
@@ -30,12 +32,15 @@ package com.jesusla.storekit {
     //
     //---------------------------------------------------------------------
     private static var context:ExtensionContext;
+    private static var _objectPool:Object = {};
+    private static var _objectPoolId:int = 0;
     private static var _isSupported:Boolean;
     private static var _productIds:Array;
     private static var _products:Object;
     private static var _instance:StoreKit;
     private static var _locked:Boolean;
     private static var _initialized:Boolean;
+    private static var _fakeTransactions:Array = [];
 
     //---------------------------------------------------------------------
     //
@@ -87,7 +92,7 @@ package com.jesusla.storekit {
 
     public static function get transactions():Array {
       if (!isSupported)
-        return [];
+        return _fakeTransactions;
       return context.call("transactions") as Array;
     }
 
@@ -106,16 +111,20 @@ package com.jesusla.storekit {
       return true;
 
       function fakeTransaction():void {
+        var receipt:ByteArray = new ByteArray();
+        receipt.writeUTFBytes("receipt");
         var transaction:Object = {
-          transactionState: true,
-          transactionIdentifier: "n/a",
+          transactionState: SKPaymentTransactionStatePurchased,
+          transactionIdentifier: String(getTimer()),
           transactionDate: new Date(),
+          transactionReceipt: receipt,
           payment: {
             productIdentifier: productIdentifier,
             quantity: quantity
           },
           error: null
         };
+        _fakeTransactions.push(transaction);
         _instance.handleTransaction(transaction);
       }
     }
@@ -123,6 +132,12 @@ package com.jesusla.storekit {
     public static function finishTransaction(transaction:Object):Boolean {
       if (isSupported && transaction.transactionIdentifier)
         return context.call("finishTransaction", transaction.transactionIdentifier);
+      for (var ix:int = 0; ix < _fakeTransactions.length; ++ix) {
+        if (_fakeTransactions[ix] != transaction)
+          continue;
+        _fakeTransactions.splice(ix, 1);
+        return true;
+      }
       return false;
     }
 
@@ -163,6 +178,15 @@ package com.jesusla.storekit {
       return keys;
     }
 
+    public function __retainObject(obj:Object):int {
+      _objectPool[++_objectPoolId] = obj;
+      return _objectPoolId;
+    }
+
+    public function __getObject(id:int):Object {
+      return _objectPool[id];
+    }
+
     //---------------------------------------------------------------------
     //
     // Private Methods.
@@ -171,6 +195,8 @@ package com.jesusla.storekit {
     private static function context_statusEventHandler(event:StatusEvent):void {
       if (event.level == "TICKET")
         context.call("claimTicket", event.code);
+      else if (event.level == "RELEASE")
+        delete _objectPool[int(event.code)];
     }
 
     {
