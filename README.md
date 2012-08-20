@@ -92,6 +92,21 @@ Usage
     // (i.e. unfinalized) transactions.
     var transactions:Array = StoreKit.transactions;
 
+    // Request restoring completed transactions
+    StoreKit.restoreCompletedTransactions(restoreCallback);
+
+    // The callback takes a single argument, which will contain an error object
+    // or null if the restore operation was successful.
+    function restoreCallback(error:Object):void {
+      // error is null if restore was successful,
+      // otherwise, it contains the following properties
+      error.code; // Error code (Apple-specific)
+      error.domain; // Error domain (Apple-specific)
+      error.localizedDescription; // e.g. "Cannot connect to iTunes Store"
+      error.localizedFailureReason; // may be null
+      error.localizedRecoverySuggestion; // may be null
+    }
+
 Coming soon
 ===========
-* Restoring transactions
+* Downloadable content

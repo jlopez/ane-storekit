@@ -48,6 +48,7 @@ FN_BEGIN(StoreKit)
   FN(transactions, transactions)
   FN(requestPayment, requestPaymentForProductId:quantity:)
   FN(finishTransaction, finishTransactionWithIdentifier:)
+  FN(restoreCompletedTransactions, restoreCompletedTransactions)
 FN_END
 
 - (id)init {
@@ -111,6 +112,10 @@ FN_END
   return YES;
 }
 
+- (void)restoreCompletedTransactions {
+  [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
+}
+
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
   ANELog(@"%s: products[%@] invalidProductIdentifiers[%@]", __PRETTY_FUNCTION__, response.products, response.invalidProductIdentifiers);
   for (SKProduct *product in response.products)
@@ -130,6 +135,7 @@ FN_END
   [request release];
 }
 
+// Sent when the transaction array has changed (additions or state changes).  Client should check state of transactions and finish as appropriate.
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
   ANELog(@"%s: %@", __PRETTY_FUNCTION__, transactions);
   [self executeOnActionScriptThread:^{
@@ -137,8 +143,23 @@ FN_END
   }];
 }
 
+// Sent when transactions are removed from the queue (via finishTransaction:).
 - (void)paymentQueue:(SKPaymentQueue *)queue removedTransactions:(NSArray *)transactions {
   ANELog(@"%s: %@", __PRETTY_FUNCTION__, transactions);
+}
+
+// Sent when an error is encountered while adding transactions from the user's purchase history back to the queue.
+- (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
+  [self executeOnActionScriptThread:^{
+    [self callMethodNamed:@"handleRestore" withArgument:error];
+  }];
+}
+
+// Sent when all transactions from the user's purchase history have successfully been added back to the queue.
+- (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
+  [self executeOnActionScriptThread:^{
+    [self callMethodNamed:@"handleRestore"];
+  }];
 }
 
 @end

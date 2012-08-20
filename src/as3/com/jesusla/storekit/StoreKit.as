@@ -41,6 +41,7 @@ package com.jesusla.storekit {
     private static var _locked:Boolean;
     private static var _initialized:Boolean;
     private static var _fakeTransactions:Array = [];
+    private static var _restoreCallback:Function;
 
     //---------------------------------------------------------------------
     //
@@ -139,6 +140,25 @@ package com.jesusla.storekit {
         return true;
       }
       return false;
+    }
+
+    public static function restoreCompletedTransactions(callback:Function):void {
+      if (!isSupported) {
+        if (callback != null)
+          callback({ localizedDescription: "Unsupported" });
+        return;
+      }
+      if (_restoreCallback != null)
+        _restoreCallback({ localizedDescription: "Aborted" });
+      _restoreCallback = callback;
+      context.call("restoreCompletedTransactions");
+    }
+
+    public function handleRestore(error:Object = null):void {
+      if (_restoreCallback == null)
+        return;
+      _restoreCallback(error);
+      _restoreCallback = null;
     }
 
     public static function addEventListener(event:String, listener:Function):void {

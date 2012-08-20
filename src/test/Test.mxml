@@ -68,6 +68,14 @@
         }
       }
 
+      private function rst():void {
+        StoreKit.restoreCompletedTransactions(handler);
+
+        function handler(error:Object):void {
+          logDump('', "restoreHandler", error || {});
+        }
+      }
+
       private function log(msg:String):void {
         console.text += msg + "\n";
       }
@@ -93,7 +101,7 @@
         <s:Button label="can?" click="canHandler()"/>
         <s:Button label="txs" click="transactionsHandler()"/>
         <s:Button label="clr" click="clrHandler()"/>
-        <s:Button label="cls" click="console.text = ''"/>
+        <s:Button label="rst" click="rst()"/>
       </s:HGroup>
 
       <s:HGroup width="80%" verticalAlign="middle">
@@ -102,7 +110,9 @@
         <s:TextInput id="product" width="100%" text="sku1"/>
       </s:HGroup>
 
-      <s:TextArea id="console" fontSize="14" height="100%" width="80%" editable="false"/>
+      <s:TextArea id="console" fontSize="14"
+        height="100%" width="80%" editable="false"
+        doubleClickEnabled="true" doubleClick="console.text = ''"/>
 
     </s:Panel>
 
