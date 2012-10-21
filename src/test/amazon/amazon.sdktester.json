@@ -1,0 +1,39 @@
+{
+  "sku1" : {
+    "itemType": "CONSUMABLE",
+    "price": 0.99,
+    "title": "Sku1",
+    "description": "This is sku1",
+    "smallIconUrl": "http://1.bp.blogspot.com/-JVicv0cmPpo/T5mtHS-WgII/AAAAAAAAAFY/01QFkJV5I0o/s1600/128.png"
+  },
+  "sku2" : {
+    "itemType": "CONSUMABLE",
+    "price": 1.99,
+    "title": "Sku2",
+    "description": "This is sku2",
+    "smallIconUrl": "http://1.bp.blogspot.com/-JVicv0cmPpo/T5mtHS-WgII/AAAAAAAAAFY/01QFkJV5I0o/s1600/128.png"
+  },
+  "sku3" : {
+    "itemType": "ENTITLED",
+    "price": 4.99,
+    "title": "Sku3",
+    "description": "This is sku3",
+    "smallIconUrl": "http://1.bp.blogspot.com/-JVicv0cmPpo/T5mtHS-WgII/AAAAAAAAAFY/01QFkJV5I0o/s1600/128.png"
+  },
+  "sku4" : {
+    "subscriptionParent": "sku6",
+    "itemType": "SUBSCRIPTION",
+    "price": 9.99,
+    "title": "Sku4 - 1 month",
+    "description": "This is sku4, a subscription for a month",
+    "smallIconUrl": "http://1.bp.blogspot.com/-JVicv0cmPpo/T5mtHS-WgII/AAAAAAAAAFY/01QFkJV5I0o/s1600/128.png"
+  },
+  "sku5" : {
+    "subscriptionParent": "sku6",
+    "itemType": "SUBSCRIPTION",
+    "price": 19.99,
+    "title": "Sku5 - 1 year",
+    "description": "This is sku5, a subscription for a year",
+    "smallIconUrl": "http://1.bp.blogspot.com/-JVicv0cmPpo/T5mtHS-WgII/AAAAAAAAAFY/01QFkJV5I0o/s1600/128.png"
+  }
+}

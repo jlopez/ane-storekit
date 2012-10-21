@@ -19,12 +19,14 @@ package com.jesusla.storekit {
     //---------------------------------------------------------------------
     private static const EXTENSION_ID:String = "com.jesusla.storekit";
 
-    public static const STOREKIT_INITIALIZED_EVENT:String = "STOREKIT_INITIALIZED_EVENT";
+    private static const STATE_PURCHASED:String = "PURCHASED";
+    private static const STATE_FAILED:String = "FAILED";
+    private static const STATE_REVOKED:String = "REVOKED";
+    private static const STATE_VERIFY:String = "VERIFY";
 
-    public static const SKPaymentTransactionStatePurchasing:uint = 0;
-    public static const SKPaymentTransactionStatePurchased:uint = 1;
-    public static const SKPaymentTransactionStateFailed:uint = 2;
-    public static const SKPaymentTransactionStateRestored:uint = 3;
+    private static const VENDOR_APPLE:String = "APPLE";
+    private static const VENDOR_GOOGLE:String = "GOOGLE";
+    private static const VENDOR_AMAZON:String = "AMAZON";
 
     //---------------------------------------------------------------------
     //
@@ -34,12 +36,10 @@ package com.jesusla.storekit {
     private static var context:ExtensionContext;
     private static var _objectPool:Object = {};
     private static var _objectPoolId:int = 0;
-    private static var _isSupported:Boolean;
-    private static var _productIds:Array;
-    private static var _products:Object;
+    private static var _productIdentifiers:Array;
     private static var _instance:StoreKit;
-    private static var _locked:Boolean;
     private static var _initialized:Boolean;
+    private static var _canMakePayments:Boolean;
     private static var _fakeTransactions:Array = [];
     private static var _restoreCallback:Function;
 
@@ -49,116 +49,60 @@ package com.jesusla.storekit {
     //
     //---------------------------------------------------------------------
     public function StoreKit() {
-      if (_locked)
+      if (_instance)
         throw new Error("Singleton");
-      _locked = true;
+      _instance = this;
     }
 
-    public static function get isSupported():Boolean {
-      return _isSupported;
-    }
-
-    public static function init(productIdentifiers:Array):void {
+    public static function init(productIdentifiers:Array, callback:Function):void {
+      // iOS requires product ids (to fetch SKProduct to later request payment)
+      // Google Play doesn't require them
+      // LCD: require product ids
       if (_initialized)
         throw new Error("Already initialized");
       _initialized = true;
-      if (isSupported)
-        context.call("init", productIdentifiers);
+      _productIdentifiers = productIdentifiers;
+      if (context)
+        context.call("init", productIdentifiers, onInit);
       else
-        setTimeout(fakeInit, 1000);
+        setTimeout(onInit, 0, true);
 
-      function fakeInit():void {
-        var products:Object = {}
-        for (var ix:uint = 0; ix < productIdentifiers.length; ++ix) {
-          var productIdentifier:String = productIdentifiers[ix];
-          products[productIdentifier] = {
-            localizedTitle: "Title for " + productIdentifier,
-            localizedDescription: "Description for " + productIdentifier,
-            localizedPrice: "$100.00",
-            price: 100,
-            productIdentifier: productIdentifier
-          };
-        }
-        _instance.handleInitialization(products);
+      function onInit(canMakePayments:Boolean):void {
+        _canMakePayments = canMakePayments;
+        if (callback != null)
+          callback(_canMakePayments);
       }
-    }
-
-    public static function get products():Object {
-      return _products;
     }
 
     public static function get canMakePayments():Boolean {
-      return isSupported && context.call("canMakePayments");
+      return _canMakePayments;
     }
 
     public static function get transactions():Array {
-      if (!isSupported)
-        return _fakeTransactions;
-      return context.call("transactions") as Array;
+      ensureAvailable();
+      if (context)
+        return context.call("transactions") as Array;
+      throw new Error("Unimplemented");
     }
 
-    public static function requestPayment(productIdentifier:String, quantity:uint = 1):Boolean {
-      if (!_products)
-        throw new Error("StoreKit not initialized");
-      if (!_products[productIdentifier])
-        throw new Error("Invalid product Id '" + productIdentifier + "'");
-      if (quantity < 1)
-        throw new Error("Invalid quantity " + quantity);
+    public static function requestPayment(productIdentifier:String, callback:Function):void {
+      ensureAvailable();
 
-      if (isSupported)
-        return context.call("requestPayment", productIdentifier, quantity);
-
-      setTimeout(fakeTransaction, 1000);
-      return true;
-
-      function fakeTransaction():void {
-        var receipt:ByteArray = new ByteArray();
-        receipt.writeUTFBytes("receipt");
-        var transaction:Object = {
-          transactionState: SKPaymentTransactionStatePurchased,
-          transactionIdentifier: String(getTimer()),
-          transactionDate: new Date(),
-          transactionReceipt: receipt,
-          payment: {
-            productIdentifier: productIdentifier,
-            quantity: quantity
-          },
-          error: null
-        };
-        _fakeTransactions.push(transaction);
-        _instance.handleTransaction(transaction);
-      }
+      if (context)
+        context.call("requestPayment", productIdentifier, callback);
+      else
+        throw new Error("Unimplemented");
     }
 
-    public static function finishTransaction(transaction:Object):Boolean {
-      if (isSupported && transaction.transactionIdentifier)
-        return context.call("finishTransaction", transaction.transactionIdentifier);
-      for (var ix:int = 0; ix < _fakeTransactions.length; ++ix) {
-        if (_fakeTransactions[ix] != transaction)
-          continue;
-        _fakeTransactions.splice(ix, 1);
-        return true;
-      }
-      return false;
+    public static function acknowledgeTransaction(transaction:Object):void {
+      ensureAvailable();
+      if (context)
+        context.call("acknowledgeTransaction", transaction);
     }
 
     public static function restoreCompletedTransactions(callback:Function):void {
-      if (!isSupported) {
-        if (callback != null)
-          callback({ localizedDescription: "Unsupported" });
-        return;
-      }
-      if (_restoreCallback != null)
-        _restoreCallback({ localizedDescription: "Aborted" });
-      _restoreCallback = callback;
-      context.call("restoreCompletedTransactions");
-    }
-
-    public function handleRestore(error:Object = null):void {
-      if (_restoreCallback == null)
-        return;
-      _restoreCallback(error);
-      _restoreCallback = null;
+      ensureAvailable();
+      context.call("restoreCompletedTransactions", callback);
     }
 
     public static function addEventListener(event:String, listener:Function):void {
@@ -169,22 +113,20 @@ package com.jesusla.storekit {
       _instance.removeEventListener(event, listener);
     }
 
-    public function handleInitialization(products:Object):void {
-      _products = products;
-      dispatchEvent(new Event(STOREKIT_INITIALIZED_EVENT));
-    }
+    public function onTransactionUpdate(status:String, transaction:Object):void {
+      var type:String;
+      if (status == STATE_PURCHASED)
+        type = TransactionEvent.TRANSACTION_PURCHASED;
+      else if (status == STATE_FAILED)
+        type = TransactionEvent.TRANSACTION_FAILED;
+      else if (status == STATE_REVOKED)
+        type = TransactionEvent.TRANSACTION_REVOKED;
+      else if (status == STATE_VERIFY)
+        type = TransactionEvent.TRANSACTION_VERIFY;
+      else
+        throw new Error("Unknown transaction update status " + status);
 
-    public function handleTransactions(transactions:Array):void {
-      for (var ix:uint = 0; ix < transactions.length; ++ix)
-        handleTransaction(transactions[ix]);
-    }
-
-    private function handleTransaction(transaction:Object):void {
-      dispatchEvent(new TransactionEvent(TransactionEvent.TRANSACTION_UPDATED, transaction));
-      if (transaction.transactionState == SKPaymentTransactionStatePurchased)
-        dispatchEvent(new TransactionEvent(TransactionEvent.TRANSACTION_PURCHASED, transaction));
-      else if (transaction.transactionState == SKPaymentTransactionStateFailed)
-        dispatchEvent(new TransactionEvent(TransactionEvent.TRANSACTION_FAILED, transaction));
+      dispatchEvent(new TransactionEvent(type, transaction));
     }
 
     public function getQualifiedClassName(obj:Object):String {
@@ -212,6 +154,17 @@ package com.jesusla.storekit {
     // Private Methods.
     //
     //---------------------------------------------------------------------
+    private static function ensureInitialized():void {
+      if (!_initialized)
+        throw new Error("Not initialized, must call init() first");
+    }
+
+    private static function ensureAvailable():void {
+      ensureInitialized();
+      if (!_canMakePayments)
+        throw new Error("Purchases are not available");
+    }
+
     private static function context_statusEventHandler(event:StatusEvent):void {
       if (event.level == "TICKET")
         context.call("claimTicket", event.code);
@@ -220,13 +173,15 @@ package com.jesusla.storekit {
     }
 
     {
-      _instance = new StoreKit();
-      context = ExtensionContext.createExtensionContext(EXTENSION_ID, "StoreKit");
+      new StoreKit();
+      context = ExtensionContext.createExtensionContext(EXTENSION_ID, EXTENSION_ID + ".StoreKit");
       if (context) {
-        _isSupported = context.actionScriptData;
-        context.addEventListener(StatusEvent.STATUS, context_statusEventHandler);
-        if (_isSupported)
+        try {
+          context.addEventListener(StatusEvent.STATUS, context_statusEventHandler);
           context.call("setActionScriptThis", _instance);
+        } catch (e:ArgumentError) {
+          context = null;
+        }
       }
     }
   }

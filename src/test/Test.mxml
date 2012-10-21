@@ -13,44 +13,34 @@
       import com.jesusla.storekit.TransactionEvent;
 
       private function applicationCompleteHandler():void {
-        StoreKit.addEventListener(StoreKit.STOREKIT_INITIALIZED_EVENT, storeKit_initializedHandler);
-        StoreKit.addEventListener(TransactionEvent.TRANSACTION_PURCHASED, storeKit_paymentSucceededHandler);
-        StoreKit.addEventListener(TransactionEvent.TRANSACTION_FAILED, storeKit_paymentFailedHandler);
+        StoreKit.addEventListener(TransactionEvent.TRANSACTION_PURCHASED, storeKit_transactionHandler);
+        StoreKit.addEventListener(TransactionEvent.TRANSACTION_FAILED, storeKit_transactionHandler);
+        StoreKit.addEventListener(TransactionEvent.TRANSACTION_REVOKED, storeKit_transactionHandler);
+        StoreKit.addEventListener(TransactionEvent.TRANSACTION_VERIFY, storeKit_transactionHandler);
       }
 
-      private function storeKit_initializedHandler(event:Event):void {
-        var p:Object = StoreKit.products;
-        log("initialized products:");
-        for (var pid:String in p) {
-          var q:Object = p[pid];
-          log("  " + pid + ": " + q.localizedTitle + " (" + q.localizedPrice + ")");
-        }
-      }
-
-      private function storeKit_paymentSucceededHandler(event:TransactionEvent):void {
+      private function storeKit_transactionHandler(event:TransactionEvent):void {
         var transaction:Object = event.transaction;
-        log("paymentSucceeded");
-        log("  Bought " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier + " (" + transaction.transactionIdentifier + ")");
-        log("receipt: " + transaction.transactionReceipt);
-      }
-
-      private function storeKit_paymentFailedHandler(event:TransactionEvent):void {
-        var transaction:Object = event.transaction;
-        log("paymentFailed");
-        log("  Unable to buy " + transaction.payment.quantity + " x " + transaction.payment.productIdentifier);
+        log(event.type);
+        for (var p:String in transaction)
+          log("  " + p + ": " + transaction[p]);
+        StoreKit.acknowledgeTransaction(event.transaction);
       }
 
       private function doInit():void {
         var skus:String = "sku1,sku2,sku3,sku4,sku5";
-        StoreKit.init(skus.split(','));
+        StoreKit.init(skus.split(','), onInit);
+
+        function onInit(status:Boolean):void {
+          log("init(): " + status);
+        }
       }
 
-      private function clrHandler():void {
-        var transactions:Array = StoreKit.transactions;
-        log("Deleting " + transactions.length + " transactions");
-        for (var ix:uint = 0; ix < transactions.length; ++ix) {
-          var t:Object = transactions[ix];
-          log("  " + ix + ". " + (StoreKit.finishTransaction(t) ? "OK" : "FAIL"));
+      private function doPurchase(id:String):void {
+        StoreKit.requestPayment(product.text, callback);
+
+        function callback(success:Boolean):void {
+          log("requestTransaction(): " + success);
         }
       }
 
@@ -69,10 +59,10 @@
       }
 
       private function rst():void {
-        StoreKit.restoreCompletedTransactions(handler);
+        StoreKit.restoreCompletedTransactions(callback);
 
-        function handler(error:Object):void {
-          logDump('', "restoreHandler", error || {});
+        function callback(success:Boolean):void {
+          log("restoreCompletedTransactions(): " + success);
         }
       }
 
@@ -99,14 +89,12 @@
       <s:HGroup width="80%" verticalAlign="middle">
         <s:Button label="init" click="doInit()"/>
         <s:Button label="can?" click="canHandler()"/>
-        <s:Button label="txs" click="transactionsHandler()"/>
-        <s:Button label="clr" click="clrHandler()"/>
         <s:Button label="rst" click="rst()"/>
+        <s:Button label="cls" click="console.text=''"/>
       </s:HGroup>
 
       <s:HGroup width="80%" verticalAlign="middle">
-        <s:Button label="buy"
-          click="log(StoreKit.requestPayment(product.text) ? 'OK' : 'FAIL');"/>
+        <s:Button label="buy" click="doPurchase(product.text)"/>
         <s:TextInput id="product" width="100%" text="sku1"/>
       </s:HGroup>
 

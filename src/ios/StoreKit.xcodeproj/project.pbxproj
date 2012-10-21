@@ -10,8 +10,8 @@
 		009AC4D61453648D001C38F5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 009AC4D51453648D001C38F5 /* Foundation.framework */; };
 		A515AB3B1561E36300D7C84E /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A515AB3A1561E36300D7C84E /* StoreKit.framework */; };
 		A5674BAE1551FC9C0057176E /* StoreKit.mm in Sources */ = {isa = PBXBuildFile; fileRef = A5674BAD1551FC9C0057176E /* StoreKit.mm */; };
-		A5FADD661551EB0F009BC110 /* NativeLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = A5FADD641551EB0F009BC110 /* NativeLibrary.h */; };
-		A5FADD671551EB0F009BC110 /* NativeLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = A5FADD651551EB0F009BC110 /* NativeLibrary.m */; };
+		A58EA6161635144000A161F2 /* NativeLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = A58EA6131635144000A161F2 /* NativeLibrary.h */; };
+		A58EA6171635144000A161F2 /* NativeLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = A58EA6141635144000A161F2 /* NativeLibrary.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,8 +19,8 @@
 		009AC4D51453648D001C38F5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		A515AB3A1561E36300D7C84E /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		A5674BAD1551FC9C0057176E /* StoreKit.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = StoreKit.mm; sourceTree = SOURCE_ROOT; };
-		A5FADD641551EB0F009BC110 /* NativeLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeLibrary.h; sourceTree = "<group>"; };
-		A5FADD651551EB0F009BC110 /* NativeLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NativeLibrary.m; sourceTree = "<group>"; };
+		A58EA6131635144000A161F2 /* NativeLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeLibrary.h; sourceTree = "<group>"; };
+		A58EA6141635144000A161F2 /* NativeLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NativeLibrary.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,7 +39,7 @@
 		009AC4C71453648D001C38F5 = {
 			isa = PBXGroup;
 			children = (
-				A5FADD631551EB0F009BC110 /* ane */,
+				A58EA6121635144000A161F2 /* ane */,
 				A5674BAD1551FC9C0057176E /* StoreKit.mm */,
 				009AC4D41453648D001C38F5 /* Frameworks */,
 				009AC4D31453648D001C38F5 /* Products */,
@@ -63,14 +63,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		A5FADD631551EB0F009BC110 /* ane */ = {
+		A58EA6121635144000A161F2 /* ane */ = {
 			isa = PBXGroup;
 			children = (
-				A5FADD641551EB0F009BC110 /* NativeLibrary.h */,
-				A5FADD651551EB0F009BC110 /* NativeLibrary.m */,
+				A58EA6131635144000A161F2 /* NativeLibrary.h */,
+				A58EA6141635144000A161F2 /* NativeLibrary.m */,
 			);
 			name = ane;
-			path = ane/src;
+			path = ../../lib/ane/src/ios;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -80,7 +80,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A5FADD661551EB0F009BC110 /* NativeLibrary.h in Headers */,
+				A58EA6161635144000A161F2 /* NativeLibrary.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,8 +134,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A5FADD671551EB0F009BC110 /* NativeLibrary.m in Sources */,
 				A5674BAE1551FC9C0057176E /* StoreKit.mm in Sources */,
+				A58EA6171635144000A161F2 /* NativeLibrary.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
