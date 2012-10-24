@@ -54,7 +54,7 @@ package com.jesusla.storekit {
       _instance = this;
     }
 
-    public static function init(productIdentifiers:Array, callback:Function):void {
+    public static function init(productIdentifiers:Array, callback:Function = null):void {
       // iOS requires product ids (to fetch SKProduct to later request payment)
       // Google Play doesn't require them
       // LCD: require product ids
@@ -85,7 +85,7 @@ package com.jesusla.storekit {
       throw new Error("Unimplemented");
     }
 
-    public static function requestPayment(productIdentifier:String, callback:Function):void {
+    public static function requestPayment(productIdentifier:String, callback:Function = null):void {
       ensureAvailable();
 
       if (context)
@@ -100,7 +100,7 @@ package com.jesusla.storekit {
         context.call("acknowledgeTransaction", transaction);
     }
 
-    public static function restoreCompletedTransactions(callback:Function):void {
+    public static function restoreCompletedTransactions(callback:Function = null):void {
       ensureAvailable();
       context.call("restoreCompletedTransactions", callback);
     }
