@@ -22,6 +22,7 @@ public class GoogleProvider implements Provider {
   public static final String TYPE = "GOOGLE";
   private final StoreKit storeKit;
   private BillingService billing;
+  private final Map<String, String> productIdentifierMap = new HashMap<String, String>();
 
   public GoogleProvider(StoreKit storeKit) {
     this.storeKit = storeKit;
@@ -43,6 +44,7 @@ public class GoogleProvider implements Provider {
 
   @Override
   public void init(String[] productIdentifiers, final Closure closure) {
+    initializeProductIdentifiers(productIdentifiers);
     boolean success = billing.checkBillingSupported(null, new BillingSupportedCallback() {
       @Override
       public void onBillingSupported(boolean billingSupported, String productType) {
@@ -57,9 +59,27 @@ public class GoogleProvider implements Provider {
     }
   }
 
+  private void initializeProductIdentifiers(String[] productIdentifiers) {
+    // Creates a mapping between product ids and clean (lowercase) ids.
+    // This is so that we can later return the original camelcase ids
+    // given the lowercased one.
+    for (String id : productIdentifiers) {
+      String cleanId = cleanProductIdentifier(id);
+      String existingProductId = productIdentifierMap.get(cleanId);
+      if (existingProductId != null && !existingProductId.equals(id))
+        Extension.fail("GooglePlay: ProductId clash between %s and %s", existingProductId, id);
+      productIdentifierMap.put(cleanId, id);
+    }
+  }
+
+  private String cleanProductIdentifier(String productIdentifier) {
+    return productIdentifier.toLowerCase();
+  }
+
   @Override
   public void requestPayment(String productIdentifier, final Closure closure) {
-    boolean success = billing.requestPurchase(productIdentifier, Consts.ITEM_TYPE_INAPP, null, new RequestPurchaseCallback() {
+    String cleanId = cleanProductIdentifier(productIdentifier);
+    boolean success = billing.requestPurchase(cleanId, Consts.ITEM_TYPE_INAPP, null, new RequestPurchaseCallback() {
       @Override
       public void requestPurchaseResponse(ResponseCode responseCode,
           String productId, String productType, String developerPayload) {
@@ -118,6 +138,7 @@ public class GoogleProvider implements Provider {
         String productId, String orderId, long purchaseTime,
         String developerPayload, int updateId, String notificationId) {
       String type = purchaseState.toString();
+      String originalProductId = productIdentifierMap.get(productId);
       if (purchaseState == PurchaseState.CANCELED)
         type = "FAILED";
       else if (purchaseState == PurchaseState.REFUNDED)
@@ -125,7 +146,7 @@ public class GoogleProvider implements Provider {
       Map<String, Object> transaction = new HashMap<String, Object>();
       transaction.put("vendor", TYPE);
       transaction.put("transactionState", type);
-      transaction.put("productIdentifier", productId);
+      transaction.put("productIdentifier", originalProductId);
       transaction.put("_transactionIdentifier", orderId);
       transaction.put("_transactionDate", new Date(purchaseTime));
       transaction.put("_id1", updateId);
