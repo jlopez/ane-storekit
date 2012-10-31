@@ -23,7 +23,7 @@ public class NullProvider implements Provider {
   }
 
   @Override
-  public void acknowledgeTransaction(Map<String, Object> transaction) {
+  public void finishTransaction(Map<String, Object> transaction) {
   }
 
   @Override

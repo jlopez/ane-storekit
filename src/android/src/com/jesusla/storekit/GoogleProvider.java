@@ -3,7 +3,6 @@ package com.jesusla.storekit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import com.jesusla.ane.Closure;
 import com.jesusla.ane.Extension;
@@ -16,10 +15,10 @@ import com.jesusla.google.Consts.ResponseCode;
 import com.jesusla.google.RequestPurchaseCallback;
 import com.jesusla.google.RestoreTransactionsCallback;
 import com.jesusla.google.Security;
-import com.jesusla.google.VerificationCallback;
+import com.jesusla.google.VerifiedPurchase;
 
 public class GoogleProvider implements Provider {
-  public static final String TYPE = "GOOGLE";
+  public static final String VENDOR = "GOOGLE";
   private final StoreKit storeKit;
   private BillingService billing;
   private final Map<String, String> productIdentifierMap = new HashMap<String, String>();
@@ -95,24 +94,9 @@ public class GoogleProvider implements Provider {
   }
 
   @Override
-  public void acknowledgeTransaction(Map<String, Object> transaction) {
-    String state = (String)transaction.get("transactionState");
-    if (state.equals("VERIFY"))
-      acceptTransaction(transaction);
-    else
-      finishTransaction(transaction);
-  }
-
-  private void acceptTransaction(Map<String, Object> transaction) {
-    String uuid = (String)transaction.get("_id");
-    VerificationCallback callback = callbacks.remove(uuid);
-    if (callback != null)
-      callback.verificationSucceeded();
-  }
-
-  private void finishTransaction(Map<String, Object> transaction) {
-    int updateId = (Integer)transaction.get("_id1");
-    String notificationId = (String)transaction.get("_id2");
+  public void finishTransaction(Map<String, Object> transaction) {
+    int updateId = (Integer)transaction.get("_updateId");
+    String notificationId = (String)transaction.get("_notificationId");
     billing.confirmNotifications(updateId, new String[] { notificationId });
   }
 
@@ -134,43 +118,46 @@ public class GoogleProvider implements Provider {
 
   private final BillingListener billingListener = new BillingListener() {
     @Override
-    public void onTransactionUpdate(PurchaseState purchaseState,
-        String productId, String orderId, long purchaseTime,
-        String developerPayload, int updateId, String notificationId) {
-      String type = purchaseState.toString();
-      String originalProductId = productIdentifierMap.get(productId);
-      if (purchaseState == PurchaseState.CANCELED)
-        type = "FAILED";
-      else if (purchaseState == PurchaseState.REFUNDED)
-        type = "REVOKED";
-      Map<String, Object> transaction = new HashMap<String, Object>();
-      transaction.put("vendor", TYPE);
-      transaction.put("transactionState", type);
-      transaction.put("productIdentifier", originalProductId);
-      transaction.put("_transactionIdentifier", orderId);
-      transaction.put("_transactionDate", new Date(purchaseTime));
-      transaction.put("_id1", updateId);
-      transaction.put("_id2", notificationId);
-      storeKit.asyncFlashCall(null, null, "onTransactionUpdate", type, transaction);
+    public void onTransactionUpdate(int updateId, VerifiedPurchase purchase) {
+      String type = convertStateToType(purchase.purchaseState);
+      Map<String, Object> transaction = buildTransaction(updateId, purchase);
+      notifyTransactionUpdate(transaction, type);
     }
 
     @Override
-    public void verifyTransaction(String signedData, String signature, VerificationCallback callback) {
-      String cb = registerCallback(callback);
-      Map<String, Object> transaction = new HashMap<String, Object>();
-      transaction.put("vendor", TYPE);
-      transaction.put("transactionState", "VERIFY");
+    public void verifyTransaction(int updateId, String signedData, String signature, VerifiedPurchase purchase) {
+      Map<String, Object> transaction = buildTransaction(updateId, purchase);
       transaction.put("_signedData", signedData);
       transaction.put("_signature", signature);
-      transaction.put("_id", cb);
-      storeKit.asyncFlashCall(null, null, "onTransactionUpdate", "VERIFY", transaction);
+      notifyTransactionUpdate(transaction, "VERIFY");
     }
   };
 
-  private final Map<String, VerificationCallback> callbacks = new HashMap<String, VerificationCallback>();
-  private String registerCallback(VerificationCallback callback) {
-    String uuid = UUID.randomUUID().toString();
-    callbacks.put(uuid, callback);
-    return uuid;
+  private Map<String, Object> buildTransaction(int updateId, VerifiedPurchase purchase) {
+    String originalProductId = productIdentifierMap.get(purchase.productId);
+    Map<String, Object> transaction = new HashMap<String, Object>();
+    transaction.put("vendor", VENDOR);
+    transaction.put("productIdentifier", originalProductId);
+    transaction.put("_transactionIdentifier", purchase.orderId);
+    transaction.put("_transactionDate", new Date(purchase.purchaseTime));
+    transaction.put("_updateId", updateId);
+    transaction.put("_notificationId", purchase.notificationId);
+    return transaction;
+  }
+
+  protected String convertStateToType(PurchaseState purchaseState) {
+    if (purchaseState == PurchaseState.CANCELED)
+      return "FAILED";
+    else if (purchaseState == PurchaseState.REFUNDED)
+      return "REVOKED";
+    else if (purchaseState == PurchaseState.PURCHASED)
+      return "PURCHASED";
+    Extension.warn("Unknown purchaseState %s", purchaseState);
+    return null;
+  }
+
+  private void notifyTransactionUpdate(Map<String, Object> transaction, String type) {
+    transaction.put("transactionState", type);
+    storeKit.asyncFlashCall(null, null, "onTransactionUpdate", transaction);
   }
 }

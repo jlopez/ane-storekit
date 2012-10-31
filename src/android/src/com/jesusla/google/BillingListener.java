@@ -1,6 +1,5 @@
 package com.jesusla.google;
 
-import com.jesusla.google.Consts.PurchaseState;
 
 public interface BillingListener {
   /**
@@ -13,6 +12,7 @@ public interface BillingListener {
    * the user has purchased an item, in which case the BillingService will
    * also call this method. Finally, this method can be called if the item
    * was refunded.
+   * @param startId
    * @param purchaseState the state of the purchase request (PURCHASED,
    *     CANCELED, or REFUNDED)
    * @param productId a string identifying a product for sale
@@ -22,8 +22,7 @@ public interface BillingListener {
    * @param developerPayload the developer provided "payload" associated with
    *     the order
    */
-  void onTransactionUpdate(PurchaseState purchaseState, String productId, String orderId,
-      long purchaseTime, String developerPayload, int updateId, String notificationId);
+  void onTransactionUpdate(int startId, VerifiedPurchase purchase);
 
-  void verifyTransaction(String signedData, String signature, VerificationCallback callback);
+  void verifyTransaction(int startId, String signedData, String signature, VerifiedPurchase purchase);
 }

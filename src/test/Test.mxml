@@ -16,15 +16,24 @@
         StoreKit.addEventListener(TransactionEvent.TRANSACTION_PURCHASED, storeKit_transactionHandler);
         StoreKit.addEventListener(TransactionEvent.TRANSACTION_FAILED, storeKit_transactionHandler);
         StoreKit.addEventListener(TransactionEvent.TRANSACTION_REVOKED, storeKit_transactionHandler);
-        StoreKit.addEventListener(TransactionEvent.TRANSACTION_VERIFY, storeKit_transactionHandler);
+        StoreKit.addEventListener(TransactionEvent.TRANSACTION_VERIFY, storeKit_verifyHandler);
+      }
+
+      private function storeKit_verifyHandler(event:TransactionEvent):void {
+        StoreKit.acknowledgeTransaction(event.transaction);
       }
 
       private function storeKit_transactionHandler(event:TransactionEvent):void {
-        var transaction:Object = event.transaction;
-        log(event.type);
-        for (var p:String in transaction)
-          log("  " + p + ": " + transaction[p]);
+        logTransaction(event.transaction);
         StoreKit.acknowledgeTransaction(event.transaction);
+      }
+
+      private function logTransaction(transaction:Object):void {
+        for (var p:String in transaction) {
+          if (p.indexOf("_") == 0)
+            continue;
+          log("  " + p + ": " + transaction[p]);
+        }
       }
 
       private function doInit():void {
@@ -40,7 +49,7 @@
         StoreKit.requestPayment(product.text, callback);
 
         function callback(success:Boolean):void {
-          log("requestTransaction(): " + success);
+          log("requestPayment(): " + success);
         }
       }
 

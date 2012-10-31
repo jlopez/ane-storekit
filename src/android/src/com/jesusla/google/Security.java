@@ -54,28 +54,6 @@ public class Security {
 
     private static String sIdentity;
 
-    /**
-     * A class to hold the verified purchase information.
-     */
-    public static class VerifiedPurchase {
-        public PurchaseState purchaseState;
-        public String notificationId;
-        public String productId;
-        public String orderId;
-        public long purchaseTime;
-        public String developerPayload;
-
-        public VerifiedPurchase(PurchaseState purchaseState, String notificationId,
-                String productId, String orderId, long purchaseTime, String developerPayload) {
-            this.purchaseState = purchaseState;
-            this.notificationId = notificationId;
-            this.productId = productId;
-            this.orderId = orderId;
-            this.purchaseTime = purchaseTime;
-            this.developerPayload = developerPayload;
-        }
-    }
-
     /** Generates a nonce (a random number used once). */
     public static long generateNonce() {
         long nonce = RANDOM.nextLong();

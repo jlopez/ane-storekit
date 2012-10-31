@@ -85,10 +85,13 @@ Usage
     // is fired. The client must now verify the transaction in an
     // implementation-specific manner (e.g. verifying its cryptographic
     // signature via a server-side request, etc.). The transaction
-    // should be acknowledged if verification passes.
+    // should be acknowledged if verification passes. Otherwise,
+    // the transaction should be rejected.
     function storeKit_verifyHandler(event:TransactionEvent):void {
       if (serverSideVerification(event.transaction))
         StoreKit.acknowledgeTransaction(event.transaction);
+      else
+        StoreKit.rejectTransaction(event.transaction);
     }
 
     // After being successfully verified, the TRANSACTION_PURCHASED

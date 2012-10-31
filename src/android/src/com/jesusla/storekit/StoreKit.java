@@ -12,14 +12,14 @@ public class StoreKit extends Context {
   public StoreKit() {
     registerFunction("init");
     registerFunction("requestPayment");
-    registerFunction("acknowledgeTransaction");
+    registerFunction("finishTransaction");
     registerFunction("restoreCompletedTransactions");
   }
 
   @Override
   protected void initContext() {
     String providerType = getRequiredProperty("SKProvider");
-    if (GoogleProvider.TYPE.equalsIgnoreCase(providerType))
+    if (GoogleProvider.VENDOR.equalsIgnoreCase(providerType))
       provider = new GoogleProvider(this);
     else if (AmazonProvider.TYPE.equalsIgnoreCase(providerType))
       provider = new AmazonProvider(this);
@@ -42,8 +42,8 @@ public class StoreKit extends Context {
     provider.requestPayment(productIdentifier, closure);
   }
 
-  public void acknowledgeTransaction(Map<String, Object> transaction) {
-    provider.acknowledgeTransaction(transaction);
+  public void finishTransaction(Map<String, Object> transaction) {
+    provider.finishTransaction(transaction);
   }
 
   public void restoreCompletedTransactions(final Closure closure) {

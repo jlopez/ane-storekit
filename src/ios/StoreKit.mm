@@ -49,9 +49,7 @@
 FN_BEGIN(StoreKit)
   FN(init, initWithProductIdentifiers:callback:)
   FN(requestPayment, requestPaymentForProductId:callback:)
-  FN(acknowledgeTransaction, acknowledgeTransaction:)
-  FN(restoreCompletedTransactions, restoreCompletedTransactionsWithCallback:)
-
+  FN(finishTransaction, finishTransaction:)
   FN(transactions, transactions)
   FN(products, products)
 FN_END
@@ -109,20 +107,6 @@ FN_END
   SKPayment *payment = [SKPayment paymentWithProduct:product];
   [paymentQueue addPayment:payment];
   [callback callWithArgument:@(YES)];
-}
-
-- (void)acceptTransaction:(NSDictionary *)transaction {
-  NSMutableDictionary *tx = [NSMutableDictionary dictionaryWithDictionary:transaction];
-  [tx setObject:@"PURCHASED" forKey:@"transactionState"];
-  [self callMethodNamed:@"onTransactionUpdate" withVarArgs:@"PURCHASED", tx, nil];
-}
-
-- (void)acknowledgeTransaction:(NSDictionary *)transaction {
-  NSString *state = [transaction objectForKey:@"transactionState"];
-  if ([state isEqualToString:@"VERIFY"])
-    [self acceptTransaction:transaction];
-  else
-    [self finishTransaction:transaction];
 }
 
 - (void)finishTransaction:(NSDictionary *)transaction {
@@ -227,7 +211,7 @@ id wrapNil(id obj) {
         @"_transactionDate": wrapNil(transaction.transactionDate),
         @"_transactionReceipt": wrapNil(transaction.transactionReceipt),
       };
-      [self callMethodNamed:@"onTransactionUpdate" withVarArgs:type, tx, nil];
+      [self callMethodNamed:@"onTransactionUpdate" withArgument:tx];
     }
     [self reviewTransactionsAfterDelay:60];
   }];

@@ -10,6 +10,9 @@ TESTFLIGHT_NOTIFY = False
 FACEBOOK_APP_ID = FB_APP_ID_HERE
 WIKI_GIT_URL = git@github.com:jlopez/ane-storekit.wiki.git
 
+STORE_PROVIDER = GOOGLE_OR_AMAZON
+GOOGLE_IDENTITY = GOOGLE_PUBLIC_KEY
+
 SRCDIR = $(ROOT)/src/test
 SRC_MAIN = $(SRCDIR)/test.mxml
 APP_XML_IN = $(SRCDIR)/app.xml.in

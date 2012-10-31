@@ -37,7 +37,6 @@ import android.util.Log;
 import com.android.vending.billing.IMarketBillingService;
 import com.jesusla.google.Consts.PurchaseState;
 import com.jesusla.google.Consts.ResponseCode;
-import com.jesusla.google.Security.VerifiedPurchase;
 
 
 /**
@@ -557,21 +556,13 @@ public class BillingService extends Service implements ServiceConnection {
         if (mListener == null)
             return;
 
-        final ArrayList<Security.VerifiedPurchase> purchases;
+        final ArrayList<VerifiedPurchase> purchases;
         purchases = Security.verifyPurchase(signedData, signature);
-        if (purchases == null || purchases.size() == 0) {
-            return;
+        if (purchases == null)
+          return;
+        for (final VerifiedPurchase purchase : purchases) {
+          mListener.verifyTransaction(startId, signedData, signature, purchase);
         }
-        mListener.verifyTransaction(signedData, signature, new VerificationCallback() {
-            @Override
-            public void verificationSucceeded() {
-                for (VerifiedPurchase vp : purchases) {
-                    mListener.onTransactionUpdate(vp.purchaseState, vp.productId,
-                          vp.orderId, vp.purchaseTime, vp.developerPayload,
-                          startId, vp.notificationId);
-                }
-            }
-        });
     }
 
     /**

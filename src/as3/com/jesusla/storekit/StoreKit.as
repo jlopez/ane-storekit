@@ -96,8 +96,17 @@ package com.jesusla.storekit {
 
     public static function acknowledgeTransaction(transaction:Object):void {
       ensureAvailable();
+      if (transaction.transactionState == STATE_VERIFY) {
+        transaction.transactionState = STATE_PURCHASED;
+        _instance.onTransactionUpdate(transaction);
+      }
+      else if (context)
+        context.call("finishTransaction", transaction);
+    }
+
+    public static function rejectTransaction(transaction:Object):void {
       if (context)
-        context.call("acknowledgeTransaction", transaction);
+        context.call("finishTransaction", transaction);
     }
 
     public static function restoreCompletedTransactions(callback:Function = null):void {
@@ -113,7 +122,8 @@ package com.jesusla.storekit {
       _instance.removeEventListener(event, listener);
     }
 
-    public function onTransactionUpdate(status:String, transaction:Object):void {
+    public function onTransactionUpdate(transaction:Object):void {
+      var status:String = transaction.transactionState;
       var type:String;
       if (status == STATE_PURCHASED)
         type = TransactionEvent.TRANSACTION_PURCHASED;

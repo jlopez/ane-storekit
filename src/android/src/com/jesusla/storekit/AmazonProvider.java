@@ -56,20 +56,7 @@ public class AmazonProvider implements Provider {
   }
 
   @Override
-  public void acknowledgeTransaction(Map<String, Object> transaction) {
-    String state = (String)transaction.get("transactionState");
-    if (state.equals("VERIFY"))
-      acceptTransaction(transaction);
-    else
-      finishTransaction(transaction);
-  }
-
-  private void acceptTransaction(Map<String, Object> transaction) {
-    transaction.put("transactionState", "PURCHASED");
-    storeKit.asyncFlashCall(null, null, "onTransactionUpdate", "PURCHASED", transaction);
-  }
-
-  private void finishTransaction(Map<String, Object> transaction) {
+  public void finishTransaction(Map<String, Object> transaction) {
     // Not with Amazon... (?)
   }
 
@@ -150,7 +137,7 @@ public class AmazonProvider implements Provider {
       transaction.put("_productType", toProductType(itemType));
       transaction.put("_purchaseToken", receipt.getPurchaseToken());
     }
-    storeKit.asyncFlashCall(null, null, "onTransactionUpdate", transactionState, transaction);
+    storeKit.asyncFlashCall(null, null, "onTransactionUpdate", transaction);
   }
 
   private void notifyRevokedSKU(String sku, String userId) {
@@ -162,7 +149,7 @@ public class AmazonProvider implements Provider {
       transaction.put("_productType", toProductType(item.getItemType()));
     else
       Extension.warn("Revoked SKU [%s] not found in product list. Omitting productType.", sku);
-    storeKit.asyncFlashCall(null, null, "onTransactionUpdate", transactionState, transaction);
+    storeKit.asyncFlashCall(null, null, "onTransactionUpdate", transaction);
   }
 
   private Map<String, Object> createTransaction(String transactionState, String userId) {
