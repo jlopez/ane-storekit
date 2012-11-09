@@ -1,3 +1,0 @@
-ANEDebug=true
-SKProvider=@STORE_PROVIDER@
-SKIdentity=@GOOGLE_IDENTITY@

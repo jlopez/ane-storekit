@@ -26,14 +26,14 @@ manifestAdditions section:
       </receiver>
     </application>
 
-In the android.properties file, for Google Play In-App Billing:
+For Google Play In-App Billing:
 
-    SKProvider=Google
-    SKIdentity=BASE64_ENCODED_PUBLIC_KEY
+    <meta-data android:name="SKProvider" android:value="Google"/>
+    <meta-data android:name="SKIdentity" android:value="BASE64_ENCODED_PUBLIC_KEY"/>
 
 For Amazon In-App Purchases:
 
-    SKProvider=Amazon
+    <meta-data android:name="SKProvider" android:value="Amazon"/>
 
 Usage
 -----
