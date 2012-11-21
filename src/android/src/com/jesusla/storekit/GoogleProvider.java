@@ -118,18 +118,17 @@ public class GoogleProvider implements Provider {
 
   private final BillingListener billingListener = new BillingListener() {
     @Override
-    public void onTransactionUpdate(int updateId, VerifiedPurchase purchase) {
-      String type = convertStateToType(purchase.purchaseState);
-      Map<String, Object> transaction = buildTransaction(updateId, purchase);
-      notifyTransactionUpdate(transaction, type);
-    }
-
-    @Override
     public void verifyTransaction(int updateId, String signedData, String signature, VerifiedPurchase purchase) {
       Map<String, Object> transaction = buildTransaction(updateId, purchase);
-      transaction.put("_signedData", signedData);
-      transaction.put("_signature", signature);
-      notifyTransactionUpdate(transaction, "VERIFY");
+      if (purchase.purchaseState == PurchaseState.PURCHASED) {
+        transaction.put("_signedData", signedData);
+        transaction.put("_signature", signature);
+        notifyTransactionUpdate(transaction, "VERIFY");
+      }
+      else {
+        String type = convertStateToType(purchase.purchaseState);
+        notifyTransactionUpdate(transaction, type);
+      }
     }
   };
 
