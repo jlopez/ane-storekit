@@ -108,8 +108,6 @@ package com.jesusla.storekit {
     }
 
     public static function rejectTransaction(transaction:Object):void {
-      if (context)
-        context.call("finishTransaction", transaction);
     }
 
     public static function restoreCompletedTransactions(callback:Function = null):void {
