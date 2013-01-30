@@ -42,6 +42,8 @@ package com.jesusla.storekit {
     private static var _canMakePayments:Boolean;
     private static var _fakeTransactions:Array = [];
     private static var _restoreCallback:Function;
+    private var transactionQueue:Array = [];
+    private var queueTransactions:Boolean = true;
 
     //---------------------------------------------------------------------
     //
@@ -71,6 +73,7 @@ package com.jesusla.storekit {
         _canMakePayments = canMakePayments;
         if (callback != null)
           callback(_canMakePayments);
+        _instance.flushQueue();
       }
     }
 
@@ -79,7 +82,7 @@ package com.jesusla.storekit {
     }
 
     public static function get transactions():Array {
-      ensureAvailable();
+      ensureInitialized();
       if (context)
         return context.call("transactions") as Array;
       throw new Error("Unimplemented");
@@ -95,7 +98,7 @@ package com.jesusla.storekit {
     }
 
     public static function acknowledgeTransaction(transaction:Object):void {
-      ensureAvailable();
+      ensureInitialized();
       if (transaction.transactionState == STATE_VERIFY) {
         transaction.transactionState = STATE_PURCHASED;
         _instance.onTransactionUpdate(transaction);
@@ -110,7 +113,7 @@ package com.jesusla.storekit {
     }
 
     public static function restoreCompletedTransactions(callback:Function = null):void {
-      ensureAvailable();
+      ensureInitialized();
       context.call("restoreCompletedTransactions", callback);
     }
 
@@ -123,6 +126,10 @@ package com.jesusla.storekit {
     }
 
     public function onTransactionUpdate(transaction:Object):void {
+      if (queueTransactions) {
+        transactionQueue.push(transaction);
+        return;
+      }
       var status:String = transaction.transactionState;
       var type:String;
       if (status == STATE_PURCHASED)
@@ -164,6 +171,16 @@ package com.jesusla.storekit {
     // Private Methods.
     //
     //---------------------------------------------------------------------
+    private function flushQueue():void {
+      if (!transactionQueue)
+        return;
+      queueTransactions = false;
+      for each (var transaction:Object in transactionQueue) {
+        onTransactionUpdate(transaction);
+      }
+      transactionQueue = null;
+    }
+
     private static function ensureInitialized():void {
       if (!_initialized)
         throw new Error("Not initialized, must call init() first");
