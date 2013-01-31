@@ -210,6 +210,7 @@ id wrapNil(id obj) {
         @"_transactionIdentifier": wrapNil(transaction.transactionIdentifier),
         @"_transactionDate": wrapNil(transaction.transactionDate),
         @"_transactionReceipt": wrapNil(transaction.transactionReceipt),
+        @"_error": wrapNil([transaction.error dictionaryRepresentation]),
       };
       [self callMethodNamed:@"onTransactionUpdate" withArgument:tx];
     }
@@ -277,6 +278,17 @@ id wrapNil(id obj) {
 - (NSDictionary *)dictionaryRepresentation {
   NSArray *keys = [NSArray arrayWithObjects:@"productIdentifier",
                    @"quantity", nil];
+  return [self dictionaryWithValuesForKeys:keys];
+}
+
+@end
+
+@implementation NSError (JLDictionaryRepresentation)
+
+- (NSDictionary *)dictionaryRepresentation {
+  NSArray *keys = [NSArray arrayWithObjects:@"domain", @"code",
+                   @"localizedDescription", @"localizedFailureReason",
+                   @"localizedRecoverySuggestion", nil];
   return [self dictionaryWithValuesForKeys:keys];
 }
 
