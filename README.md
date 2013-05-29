@@ -1,6 +1,6 @@
-Storekit iOS ANE
-================
-Download the latest binary from [here](ane-storekit/wiki/storekit.ane)
+In App Purchases ANE
+====================
+Download the latest binary from [here](http://anes.s3.amazonaws.com/storekit.ane)
 
 Android Setup
 -------------
