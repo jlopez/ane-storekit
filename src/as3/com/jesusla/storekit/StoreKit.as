@@ -28,6 +28,11 @@ package com.jesusla.storekit {
     private static const VENDOR_GOOGLE:String = "GOOGLE";
     private static const VENDOR_AMAZON:String = "AMAZON";
 
+    private static const ERROR_NONE:int = 0;
+    private static const ERROR_OTHER:int = 1;
+    private static const ERROR_USER_CANCELLED:int = 2;
+    private static const ERROR_NOT_AUTHORIZED:int = 3;
+
     //---------------------------------------------------------------------
     //
     // Private Properties.

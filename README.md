@@ -118,6 +118,8 @@ Usage
     transaction.transactionState; // One of STATE_FAILED, STATE_VERIFY,
                                   // STATE_PURCHASED, STATE_REVOKED
     transaction.productIdentifier; // e.g. 'sku1' (String)
+    transaction.error; // One of ERROR_NONE, ERROR_USER_CANCELLED,
+                       //        ERROR_NOT_AUTHORIZED, ERROR_OTHER
 
     // Note that during a VERIFY, only the first two fields are guaranteed
     // to be present. The rest of the fields will be vendor-specific.

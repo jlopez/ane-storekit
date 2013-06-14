@@ -211,11 +211,22 @@ id wrapNil(id obj) {
         @"_transactionDate": wrapNil(transaction.transactionDate),
         @"_transactionReceipt": wrapNil(transaction.transactionReceipt),
         @"_error": wrapNil([transaction.error dictionaryRepresentation]),
+        @"error": translateError(transaction.error),
       };
       [self callMethodNamed:@"onTransactionUpdate" withArgument:tx];
     }
     [self reviewTransactionsAfterDelay:60];
   }];
+}
+
+NSNumber *translateError(NSError *error) {
+  if (![SKErrorDomain isEqual:error.domain])
+    return @0;
+  if (error.code == SKErrorPaymentCancelled)
+    return @2;
+  if (error.code == SKErrorPaymentNotAllowed)
+    return @3;
+  return @1;
 }
 
 // Sent when transactions are removed from the queue (via finishTransaction:).
