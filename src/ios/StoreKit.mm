@@ -49,6 +49,7 @@
 FN_BEGIN(StoreKit)
   FN(init, initWithProductIdentifiers:callback:)
   FN(requestPayment, requestPaymentForProductId:callback:)
+  FN(restoreCompletedTransactions, restoreCompletedTransactionsWithCallback:)
   FN(finishTransaction, finishTransaction:)
   FN(transactions, transactions)
   FN(products, products)
