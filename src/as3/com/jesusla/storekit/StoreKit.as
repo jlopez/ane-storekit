@@ -65,8 +65,6 @@ package com.jesusla.storekit {
       // iOS requires product ids (to fetch SKProduct to later request payment)
       // Google Play doesn't require them
       // LCD: require product ids
-      if (_initialized)
-        throw new Error("Already initialized");
       _initialized = true;
       _productIdentifiers = productIdentifiers;
       if (context)
@@ -75,7 +73,7 @@ package com.jesusla.storekit {
         setTimeout(onInit, 0, true);
 
       function onInit(canMakePayments:Boolean):void {
-        _canMakePayments = canMakePayments;
+        _canMakePayments ||= canMakePayments;
         if (callback != null)
           callback(_canMakePayments);
         _instance.flushQueue();

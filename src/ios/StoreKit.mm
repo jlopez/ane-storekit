@@ -8,15 +8,16 @@
 #import <StoreKit/StoreKit.h>
 #import "NativeLibrary.h"
 
-@interface StoreKit : NativeLibrary<SKProductsRequestDelegate, SKPaymentTransactionObserver> {
+@interface StoreKit : NativeLibrary<SKPaymentTransactionObserver> {
 @private
-  NSMutableDictionary *products;
   BOOL observerInitialized;
   NSTimer *transactionReminderTimer;
 }
 
-@property (nonatomic, retain) ASFunction *initCallback;
+@property (nonatomic, retain) NSMutableDictionary *products;
 @property (nonatomic, retain) ASFunction *restoreTransactionsCallback;
+
+- (void)reviewTransactionsAfterDelay:(NSTimeInterval)delay;
 
 @end
 
@@ -44,6 +45,73 @@
 
 @end
 
+@interface ProductsRequest : NSObject<SKProductsRequestDelegate> {
+}
+
+@property (nonatomic, retain) NSArray *productIdentifiers;
+@property (nonatomic, retain) ASFunction *callback;
+@property (nonatomic, retain) StoreKit *storeKit;
+
+@end
+
+@implementation ProductsRequest
+
+@synthesize productIdentifiers;
+@synthesize callback;
+@synthesize storeKit;
+
+
+- (void)dealloc {
+  [productIdentifiers release];
+  [callback release];
+  [storeKit release];
+  [super dealloc];
+}
+
+
+- (void)start {
+  NSSet *ids = [NSSet setWithArray:productIdentifiers];
+  SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:ids];
+  productsRequest.delegate = self;
+  [productsRequest start];
+  // request gets released in delegate - Not a leak
+}
+
+
+- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
+  ANELog(@"%s: products[%@] invalidProductIdentifiers[%@]", __PRETTY_FUNCTION__, response.products, response.invalidProductIdentifiers);
+  NSMutableDictionary *products = [[[NSMutableDictionary alloc] initWithCapacity:[response.products count]] autorelease];
+  for (SKProduct *product in response.products)
+    [products setObject:product forKey:product.productIdentifier];
+  [storeKit executeOnActionScriptThread:^{
+    storeKit.products = products;
+    BOOL canMakePayments = [SKPaymentQueue canMakePayments];
+    [callback callWithArgument:@(canMakePayments)];
+    if (canMakePayments)
+      [storeKit reviewTransactionsAfterDelay:60];
+  }];
+}
+
+
+- (void)requestDidFinish:(SKRequest *)request {
+  ANELog(@"%s: %@", __PRETTY_FUNCTION__, request);
+  [request release];
+  [self release];
+}
+
+
+- (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
+  ANELog(@"%s: %@, %@", __PRETTY_FUNCTION__, request, error);
+  [request release];
+  [storeKit executeOnActionScriptThread:^{
+    [callback callWithArgument:@(NO)];
+    [self release];
+  }];
+}
+
+
+@end
+
 @implementation StoreKit
 
 FN_BEGIN(StoreKit)
@@ -55,12 +123,11 @@ FN_BEGIN(StoreKit)
   FN(products, products)
 FN_END
 
-@synthesize initCallback;
+@synthesize products;
 @synthesize restoreTransactionsCallback;
 
 - (id)init {
   if (self = [super init]) {
-    products = [NSMutableDictionary new];
     observerInitialized = NO;
   }
   return self;
@@ -68,7 +135,6 @@ FN_END
 
 - (void)dealloc {
   [restoreTransactionsCallback release];
-  [initCallback release];
   [products release];
   if (observerInitialized)
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
@@ -76,17 +142,15 @@ FN_END
 }
 
 - (void)initWithProductIdentifiers:(NSArray *)productIdentifiers callback:(ASFunction *)callback {
-  NSSet *ids = [NSSet setWithArray:productIdentifiers];
-  SKProductsRequest *productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:ids];
-  productsRequest.delegate = self;
-  [productsRequest start];
-  // request gets released in delegate - Not a leak
+  ProductsRequest *request = [ProductsRequest new];
+  request.storeKit = self;
+  request.productIdentifiers = productIdentifiers;
+  request.callback = callback;
+  [request start];
 
   if (!observerInitialized)
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
   observerInitialized = YES;
-
-  self.initCallback = callback;
 }
 
 - (NSArray *)transactions {
@@ -153,33 +217,6 @@ FN_END
   // (transactions can't be added to the queue out of the blue)
   // transaction reviews are restarted as soon as new transactions are
   // added to the queue in the paymentQueue:updatedTransactions: delegate method
-}
-
-- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
-  ANELog(@"%s: products[%@] invalidProductIdentifiers[%@]", __PRETTY_FUNCTION__, response.products, response.invalidProductIdentifiers);
-  for (SKProduct *product in response.products)
-    [products setObject:product forKey:product.productIdentifier];
-  [self executeOnActionScriptThread:^{
-    BOOL canMakePayments = [SKPaymentQueue canMakePayments];
-    [initCallback callWithArgument:@(canMakePayments)];
-    self.initCallback = nil;
-    if (canMakePayments)
-      [self reviewTransactionsAfterDelay:60];
-  }];
-}
-
-- (void)requestDidFinish:(SKRequest *)request {
-  ANELog(@"%s: %@", __PRETTY_FUNCTION__, request);
-  [request release];
-}
-
-- (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
-  ANELog(@"%s: %@, %@", __PRETTY_FUNCTION__, request, error);
-  [request release];
-  [self executeOnActionScriptThread:^{
-    [initCallback callWithArgument:@(NO)];
-    self.initCallback = nil;
-  }];
 }
 
 id wrapNil(id obj) {

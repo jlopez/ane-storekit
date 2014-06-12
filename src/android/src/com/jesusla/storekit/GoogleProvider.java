@@ -21,7 +21,7 @@ public class GoogleProvider implements Provider {
   public static final String VENDOR = "GOOGLE";
   private final StoreKit storeKit;
   private BillingService billing;
-  private final Map<String, String> productIdentifierMap = new HashMap<String, String>();
+  private Map<String, String> productIdentifierMap = new HashMap<String, String>();
 
   public GoogleProvider(StoreKit storeKit) {
     this.storeKit = storeKit;
@@ -43,7 +43,7 @@ public class GoogleProvider implements Provider {
 
   @Override
   public void init(String[] productIdentifiers, final Closure closure) {
-    initializeProductIdentifiers(productIdentifiers);
+    productIdentifierMap = buildProductIdentifiers(productIdentifiers);
     boolean success = billing.checkBillingSupported(null, new BillingSupportedCallback() {
       @Override
       public void onBillingSupported(boolean billingSupported, String productType) {
@@ -58,17 +58,19 @@ public class GoogleProvider implements Provider {
     }
   }
 
-  private void initializeProductIdentifiers(String[] productIdentifiers) {
+  private Map<String, String> buildProductIdentifiers(String[] productIdentifiers) {
     // Creates a mapping between product ids and clean (lowercase) ids.
     // This is so that we can later return the original camelcase ids
     // given the lowercased one.
+    Map<String, String> map = new HashMap<String, String>();
     for (String id : productIdentifiers) {
       String cleanId = cleanProductIdentifier(id);
-      String existingProductId = productIdentifierMap.get(cleanId);
+      String existingProductId = map.get(cleanId);
       if (existingProductId != null && !existingProductId.equals(id))
         Extension.fail("GooglePlay: ProductId clash between %s and %s", existingProductId, id);
-      productIdentifierMap.put(cleanId, id);
+      map.put(cleanId, id);
     }
+    return map;
   }
 
   private String cleanProductIdentifier(String productIdentifier) {
