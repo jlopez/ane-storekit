@@ -24,6 +24,10 @@ manifestAdditions section:
                   android:permission="com.amazon.inapp.purchasing.Permission.NOTIFY"/>
         </intent-filter>
       </receiver>
+
+      <!-- Activity used for google play billing API v3 purchases -->
+      <activity android:name="com.jesusla.google.GoogleInAppBillingActivity"
+                android:theme="@android:style/Theme.NoDisplay"/>
     </application>
 
 For Google Play In-App Billing:
