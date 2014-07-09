@@ -86,7 +86,7 @@
   [storeKit executeOnActionScriptThread:^{
     storeKit.products = products;
     BOOL canMakePayments = [SKPaymentQueue canMakePayments];
-    [callback callWithArgument:@(canMakePayments)];
+    [callback callWithVarArgs:@(YES), @(canMakePayments), nil];
     if (canMakePayments)
       [storeKit reviewTransactionsAfterDelay:60];
   }];
@@ -104,7 +104,7 @@
   ANELog(@"%s: %@, %@", __PRETTY_FUNCTION__, request, error);
   [request release];
   [storeKit executeOnActionScriptThread:^{
-    [callback callWithArgument:@(NO)];
+    [callback callWithVarArgs:@(NO), @(NO), nil];
     [self release];
   }];
 }

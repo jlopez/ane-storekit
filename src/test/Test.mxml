@@ -24,8 +24,9 @@
       }
 
       private function storeKit_transactionHandler(event:TransactionEvent):void {
-        logTransaction(event.transaction);
-        StoreKit.acknowledgeTransaction(event.transaction);
+        var transaction:Object = event.transaction;
+        log(JSON.stringify(transaction, null, 2));
+        StoreKit.acknowledgeTransaction(transaction);
       }
 
       private function logTransaction(transaction:Object):void {
@@ -55,7 +56,7 @@
 
       private function canHandler():void {
         var can:Boolean = StoreKit.canMakePayments;
-        log(can ? 'yes' : 'no');
+        log('init: ' + (StoreKit.initialized ? 'yes': 'no') + ', can: ' + (can ? 'yes' : 'no'));
       }
 
       private function transactionsHandler():void {

@@ -63,7 +63,7 @@ public class GoogleProvider implements Provider {
         if (!result.isSuccess()) {
           Extension.warn("Unable to start IabHelper for google provider");
           if (closure != null)
-            closure.invoke(null, false);
+            closure.invoke(null, false, false);
         }
 
         OnInventoryUpdatedListener mInventoryFinihsedListener = new OnInventoryUpdatedListener() {
@@ -97,7 +97,7 @@ public class GoogleProvider implements Provider {
         if (!result.isSuccess()) {
           Extension.warn("Unable to obtain user inventory from google market");
           if (closure != null)
-            closure.invoke(null, false);
+            closure.invoke(null, false, false);
         }
         else {
           instance.inventory = inventory;
@@ -105,7 +105,7 @@ public class GoogleProvider implements Provider {
           listener.onFinsihed();
 
           if (closure != null)
-            closure.asyncInvoke(helper.subscriptionsSupported());
+            closure.asyncInvoke(true, helper.subscriptionsSupported());
         }
       }
     };

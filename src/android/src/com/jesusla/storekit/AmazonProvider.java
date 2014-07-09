@@ -77,7 +77,7 @@ public class AmazonProvider implements Provider {
       userId = getUserIdResponse.getUserId();
       Extension.debug("Received user Id: %s", userId);
       GetUserIdRequestStatus status = getUserIdResponse.getUserIdRequestStatus();
-      callback(getUserIdResponse.getRequestId(), status == GetUserIdRequestStatus.SUCCESSFUL);
+      callback(getUserIdResponse.getRequestId(), true, status == GetUserIdRequestStatus.SUCCESSFUL);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class AmazonProvider implements Provider {
       ItemDataRequestStatus status = itemDataResponse.getItemDataRequestStatus();
       Closure callback = releaseCallback(itemDataResponse.getRequestId());
       if (status == ItemDataRequestStatus.FAILED)
-        callback.asyncInvoke(false);
+        callback.asyncInvoke(false, false);
       else
         requestUserId(callback);
     }

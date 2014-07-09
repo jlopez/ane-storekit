@@ -63,7 +63,9 @@ Usage
     // If true, the system is ready to process orders. This flag can be
     // obtained at any time with the canMakePayments property. The caller
     // should adjust the UI appropriately in those cases when this flag is false.
-    StoreKit.canMakePayments;
+    StoreKit.initialized; // if false initialization failed (e.g. no network)
+    StoreKit.canMakePayments; // once initialized, this may be false if purchases
+                              // are disabled
 
     // To request a purchase:
     StoreKit.requestPayment('sku1', requestCallback);
