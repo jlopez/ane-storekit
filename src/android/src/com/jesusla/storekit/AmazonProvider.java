@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import android.content.Context;
@@ -30,6 +31,7 @@ public class AmazonProvider implements Provider {
   private final StoreKit storeKit;
   private final Map<String, Closure> callbacks = new HashMap<String, Closure>();
   private Map<String, Item> items;
+  private Map<String, Object> products;
   private String userId;
 
   public AmazonProvider(StoreKit storeKit) {
@@ -47,6 +49,11 @@ public class AmazonProvider implements Provider {
     Set<String> skus = new HashSet<String>(Arrays.asList(productIdentifiers));
     String id = PurchasingManager.initiateItemDataRequest(skus);
     registerCallback(id, closure);
+  }
+
+  @Override
+  public Map<String, Object> getProducts() {
+    return products;
   }
 
   @Override
@@ -89,8 +96,10 @@ public class AmazonProvider implements Provider {
       Closure callback = releaseCallback(itemDataResponse.getRequestId());
       if (status == ItemDataRequestStatus.FAILED)
         callback.asyncInvoke(false, false);
-      else
+      else {
+        products = buildProductList();
         requestUserId(callback);
+      }
     }
 
     @Override
@@ -138,6 +147,21 @@ public class AmazonProvider implements Provider {
       transaction.put("_purchaseToken", receipt.getPurchaseToken());
     }
     storeKit.asyncFlashCall(null, null, "onTransactionUpdate", transaction);
+  }
+
+  protected Map<String, Object> buildProductList() {
+    Map<String, Object> rv = new HashMap<String, Object>();
+    for (Entry<String, Item> e : items.entrySet()) {
+      String sku = e.getKey();
+      Item item = e.getValue();
+      Map<String, Object> product = new HashMap<String, Object>();
+      product.put("productIdentifier", sku);
+      product.put("localizedTitle", item.getTitle());
+      product.put("localizedDescription", item.getDescription());
+      product.put("localizedPrice", item.getPrice());
+      products.put(sku, product);
+    }
+    return rv;
   }
 
   private void notifyRevokedSKU(String sku, String userId) {

@@ -11,6 +11,7 @@ public class StoreKit extends Context {
 
   public StoreKit() {
     registerFunction("init");
+    registerFunction("products", "getProducts");
     registerFunction("requestPayment");
     registerFunction("finishTransaction");
     registerFunction("restoreCompletedTransactions");
@@ -36,6 +37,10 @@ public class StoreKit extends Context {
 
   public void init(String[] productIdentifiers, final Closure closure) {
     provider.init(productIdentifiers, closure);
+  }
+
+  public Map<String, Object> getProducts() {
+      return provider.getProducts();
   }
 
   public void requestPayment(String productIdentifier, final Closure closure) {

@@ -1,8 +1,10 @@
 package com.jesusla.storekit;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import android.content.Intent;
 
@@ -14,13 +16,14 @@ import com.jesusla.google.IabResult;
 import com.jesusla.google.Inventory;
 import com.jesusla.google.Purchase;
 import com.jesusla.google.Security;
+import com.jesusla.google.SkuDetails;
 
 public class GoogleProvider implements Provider {
-  private static String TAG = "GoogleProvider";
   public static final String VENDOR = "GOOGLE";
   private final StoreKit storeKit;
   private Map<String, String> productIdentifierMap = new HashMap<String, String>();
   private final Map<String, Closure> callbacks = new HashMap<String, Closure>();
+  private Map<String, Object> products;
   private Inventory inventory;
 
   // The helper object
@@ -53,12 +56,17 @@ public class GoogleProvider implements Provider {
     }
   }
 
+  @Override
+  public Map<String, Object> getProducts() {
+    return products;
+  }
 
   @Override
   public void init(String[] productIdentifiers, final Closure closure) {
     productIdentifierMap = buildProductIdentifiers(productIdentifiers);
 
     helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
+      @Override
       public void onIabSetupFinished(IabResult result) {
         if (!result.isSuccess()) {
           Extension.warn("Unable to start IabHelper for google provider");
@@ -90,6 +98,7 @@ public class GoogleProvider implements Provider {
   private void updateInventory(final Closure closure, final OnInventoryUpdatedListener listener) {
     // Listener that's called when we finish querying the items and subscriptions we own
     IabHelper.QueryInventoryFinishedListener mGotInventoryListener = new IabHelper.QueryInventoryFinishedListener() {
+      @Override
       public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
         // Have we been disposed of in the meantime? If so, quit.
         if (helper == null) return;
@@ -100,9 +109,11 @@ public class GoogleProvider implements Provider {
             closure.invoke(null, false, false);
         }
         else {
-          instance.inventory = inventory;
+          GoogleProvider.this.inventory = inventory;
 
           listener.onFinsihed();
+
+          products = buildProductList();
 
           if (closure != null)
             closure.asyncInvoke(true, helper.subscriptionsSupported());
@@ -111,7 +122,25 @@ public class GoogleProvider implements Provider {
     };
 
     //Initialize user inventory
-    helper.queryInventoryAsync(mGotInventoryListener);
+    helper.queryInventoryAsync(true, new ArrayList<String>(productIdentifierMap.keySet()), mGotInventoryListener);
+  }
+
+  protected Map<String, Object> buildProductList() {
+    Map<String, Object> rv = new HashMap<String, Object>();
+    for (Entry<String, String> e : productIdentifierMap.entrySet()) {
+      String cleanSku = e.getKey();
+      String sku = e.getValue();
+      Map<String, Object> product = new HashMap<String, Object>();
+      SkuDetails details = inventory.getSkuDetails(cleanSku);
+      if (details == null)
+          continue;
+      product.put("productIdentifier", sku);
+      product.put("localizedTitle", details.getTitle());
+      product.put("localizedDescription", details.getDescription());
+      product.put("localizedPrice", details.getPrice());
+      rv.put(sku, product);
+    }
+    return rv;
   }
 
   private Map<String, String> buildProductIdentifiers(String[] productIdentifiers) {

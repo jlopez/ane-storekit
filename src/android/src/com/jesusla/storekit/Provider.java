@@ -10,4 +10,5 @@ public interface Provider {
   void requestPayment(String productIdentifier, Closure closure);
   void finishTransaction(Map<String, Object> transaction);
   void restoreCompletedTransactions(Closure closure);
+  Map<String, Object> getProducts();
 }

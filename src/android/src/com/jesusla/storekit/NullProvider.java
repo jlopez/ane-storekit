@@ -18,6 +18,11 @@ public class NullProvider implements Provider {
   }
 
   @Override
+  public Map<String, Object> getProducts() {
+    return null;
+  }
+
+  @Override
   public void requestPayment(String productIdentifier, Closure closure) {
     closure.invoke(null, false);
   }

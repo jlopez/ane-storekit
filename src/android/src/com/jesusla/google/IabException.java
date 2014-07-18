@@ -21,6 +21,7 @@ package com.jesusla.google;
  * To get the IAB result that caused this exception to be thrown,
  * call {@link #getResult()}.
  */
+@SuppressWarnings("serial")
 public class IabException extends Exception {
     IabResult mResult;
 

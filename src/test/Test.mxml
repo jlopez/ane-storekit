@@ -43,6 +43,7 @@
 
         function onInit(status:Boolean):void {
           log("init(): " + status);
+          log("products: " + JSON.stringify(StoreKit.products, null, 2));
         }
       }
 

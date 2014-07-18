@@ -66,6 +66,12 @@ Usage
     StoreKit.initialized; // if false initialization failed (e.g. no network)
     StoreKit.canMakePayments; // once initialized, this may be false if purchases
                               // are disabled
+    StoreKit.products; // Contains an object keyed by SKU containing product info
+      // Properties for each product entry:
+      // productIdentifier: The SKU string
+      // localizedTitle
+      // localizedDescription
+      // localizedPrice: The price in local currency including the currency sign
 
     // To request a purchase:
     StoreKit.requestPayment('sku1', requestCallback);

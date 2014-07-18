@@ -88,6 +88,12 @@ package com.jesusla.storekit {
       return _canMakePayments;
     }
 
+    public static function get products():Object {
+      if (context)
+        return context.call("products");
+      throw new Error("Unimplemented");
+    }
+
     public static function get transactions():Array {
       ensureInitialized();
       if (context)
